@@ -1,0 +1,30 @@
+:root {
+    --body-bg: #FFFFFF;
+    --body-fg: #000000;
+}
+
+[data-theme="dark"] {
+    --body-bg: #000000;
+    --body-fg: #FFFFFF;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--body-bg);
+    color: var(--body-fg);
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+.extra {
+    background-color: #808080;
+}
