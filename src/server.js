@@ -120,7 +120,7 @@ app.use((err, req, res, next) => {
 });
 
 server.listen(port, () => {
-    console.log(`Listen on port ${port}.`);
+    console.log(`Listen e.g. on http://localhost:${port}.`);
 });
 
 //const wss = expressWs(app, server);

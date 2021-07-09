@@ -1,4 +1,4 @@
-:root {
+/* :root {
     --body-bg: #FFFFFF;
     --body-fg: #000000;
 }
@@ -6,7 +6,7 @@
 [data-theme="dark"] {
     --body-bg: #000000;
     --body-fg: #FFFFFF;
-}
+} */
 
 * {
     margin: 0;
