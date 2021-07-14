@@ -5,10 +5,10 @@ const express = require("express");
 const serveIndex = require("serve-index");
 const fs = require("fs");
 const mmm = require("mmmagic");
-
-//import * as http from 'http';
-//const ws = require('ws');
-//const expressWs = require('express-ws');
+const db = require("./database.js")
+    //import * as http from 'http';
+    //const ws = require('ws');
+    //const expressWs = require('express-ws');
 
 const contentPath = "./src/public";
 const dataPath = "../data";
@@ -46,6 +46,25 @@ app.get("/", (req, res) => {
 app.get("/about", (req, res) => {
     res.render("pages/about", {});
 });
+
+
+app.get("/db", (req, res, next) => {
+    const sql = "SELECT * FROM data"
+    const params = []
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            res.status(400).json({ "error": err.message });
+            return;
+        }
+        res.json(rows)
+            // {
+            //     "message": "success",
+            //     "data": rows
+            // })
+    });
+});
+
+
 
 app.use(
     "/",
