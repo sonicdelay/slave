@@ -11,7 +11,7 @@ const db = require("./database.js")
     //const expressWs = require('express-ws');
 
 const contentPath = "./src/public";
-const dataPath = "../data";
+const dataPath = "../";
 const port = "3456";
 
 console.log(path.resolve(contentPath));
