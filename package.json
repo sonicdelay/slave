@@ -1,31 +1,19 @@
 {
-    "name": "pi",
-    "version": "1.0.0",
-    "description": "",
-    "main": "dist/server.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "dev": "nodemon src/server.js",
-        "predev": "git pull && npm install",
-        "start": "node server.js"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "bcryptjs": "^2.4.3",
-        "busboy": "^0.3.1",
-        "dotenv": "^10.0.0",
-        "ejs": "^3.1.6",
-        "express": "^4.17.1",
-        "sass": "^1.35.2",
-        "serve-index": "^1.9.1",
-        "sqlite": "^4.0.23",
-        "sqlite3": "^5.0.2",
-        "uuid": "^8.3.1",
-        "ws": "^7.5.1"
-    },
-    "devDependencies": {
-        "eslint": "^7.30.0",
-        "nodemon": "^2.0.4"
-    }
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon ./index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "busboy": "^0.3.1",
+    "express": "^4.17.1",
+    "serve-index": "^1.9.1",
+    "uuid": "^8.3.2",
+    "ws": "^8.2.3"
+  }
 }
