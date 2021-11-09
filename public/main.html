@@ -1,0 +1,43 @@
+<div class="container">
+    <header class="d-flex justify-content-center py-3 primary">
+        <ul class="nav nav-pills">
+            <li class="nav-item"><a href="#" class="nav-link" active" aria-current="page"">Home</a></li>
+            <li class=" nav-item"><a href="#" class="nav-link">Features</a></li>
+            <li class="nav-item"><a href="#" class="nav-link">Pricing</a></li>
+            <li class="nav-item"><a href="#" class="nav-link">FAQs</a></li>
+            <li class="nav-item"><a href="#" class="nav-link">About</a></li>
+        </ul>
+    </header>
+    <div id="nav">
+        <button id="path"></button>
+        <label>+<input type="file" name="file" id="file" multiple style="display:none;" /></label>
+        <label>*</label>
+    </div>
+    <button type="button" class="send">Send</button>
+    <form>
+        <textarea id="action"></textarea>
+        <textarea id="feedback"></textarea>
+    </form>
+    <button type="button" class="send">Send</button>
+</div>
+<div id="output"></div>
+<nav>
+    <h1>SLAVE</h1>
+</nav>
+<!-- <textarea id="log" cols="60" rows="30"></textarea> -->
+<!-- <button onclick="load('lorem.html','#content')">Load</button>
+<button onclick="send()">SEND</button> -->
+<a href="/slave">Index</a>
+<a href="/lorem.html">Load Lorem</a>
+<a href="/ipsum.html">Load Ipsum</a>
+<a href="{url:'/',target:'body'}">Object</a>
+<a href="http://www.sonicdelay.net">Remote</a>
+<article id="content">ABC</article>
+<pre id="feedback">...</pre>
+<script type="module">
+    (()=>{
+        load('lorem.html','#content')
+
+    })();
+
+</script>
