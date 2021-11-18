@@ -7,23 +7,56 @@ const ws = require('ws');
 const express = require('express');
 const serveIndex = require('serve-index');
 const uuid = require('uuid');
+const os = require('os');
+const inspect = require('util').inspect;
+const bodyParser = require('body-parser');
+const Busboy = require('busboy');
 
 const contentPath = "../";
-
 const app = express();
 const auth = { login: 'admin', password: 'admin' };
+
+app.use(express.urlencoded({
+  extended: true
+}));
+app.use(express.json());
+app.post('*', (req, res, next) => {
+  const busboy = new Busboy({
+    headers: req.headers,
+    limits: {
+      fileSize: 256 * 1024 * 1024,
+    },
+  });
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    if (filename != "") {
+      var saveTo = path.join(os.tmpdir(), path.basename(filename));
+      if(!req.body[fieldname]) req.body[fieldname] = [];
+      try {
+        file.pipe(fs.createWriteStream(saveTo));
+        req.body[fieldname].push({
+          tmpFile: saveTo, filename, encoding, mimetype
+        });
+      } catch (e) {
+        next();
+      }
+    }
+  });
+  busboy.on('field', (fieldname, val, fieldnameTruncated, valTruncated) => {
+    if(!req.body[fieldname]) req.body[fieldname] = [];
+    req.body[fieldname].push(val);
+  });
+  busboy.on('finish', next);
+  req.pipe(busboy);
+});
+
 app.use((req, res, next) => {
-  console.log(req.method, req.url);
+  console.log("--------------------------------------");
+  console.log(req.method, req.url, req.body);
   next();
 });
 
 
 app.use('/', express.static(path.join(__dirname, 'public')));
-
-app.post('*', (req, res, next) => {
-  console.log("POST:", req.url);
-});
-
 
 app.use((req, res, next) => {
   const b64auth = (req.headers.authorization || "").split(" ")[1] || "";
@@ -111,7 +144,7 @@ app.use(
       `);
     }
   }));
-
+//##### Error handler #####
 app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
@@ -120,6 +153,7 @@ app.use((err, req, res, next) => {
   res.json(err);
 });
 
+//##### Action logger #####
 app.on("action", function (msg) {
   console.log(msg);
 });
@@ -128,6 +162,7 @@ const server = app.listen(3000, function () {
   console.log('server is running at %s', server.address().port);
 });
 
+//##### WSS setup #####
 const wss = new ws.Server({ server });
 wss.on("connection", (ws) => {
   ws.id = uuid.v4().toString();
@@ -147,6 +182,11 @@ wss.on("connection", (ws) => {
   app.wss = wss;
 });
 
-const broadcast = () => {
-
+const broadcast = (msg, id = '') => {
+  app.wss.clients.forEach((client) => {
+    if (id === '' || client.id === id) {
+      if (typeof msg !== 'string') msg = JSON.stringify(msg);
+      client.send(msg);
+    }
+  });
 };
