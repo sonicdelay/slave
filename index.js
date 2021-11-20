@@ -1,70 +1,55 @@
-import  path from "path";
-import http from "http";
-import * as uuid from "uuid";
-import express from "express";
-import serveIndex from "serve-index";
-import ws from "ws";
-import * as fs from "fs";
-//import * as  db from './database.js';
-import * as url from "url";
-import * as vm from "vm";
-import * as os from "os";
+const fs = require('fs');
+const http = require('http');
+const path = require('path');
+const url = require('url');
+const vm = require('vm');
+const ws = require('ws');
+const express = require('express');
+const serveIndex = require('serve-index');
+const uuid = require('uuid');
+const os = require('os');
+const inspect = require('util').inspect;
+const bodyParser = require('body-parser');
+const Busboy = require('busboy');
 
-import { inspect } from "util";
-import * as bodyParser from "body-parser";
-import * as Busboy from "busboy";
-
-const moduleURL = new URL(import.meta.url);
-const __dirname = path.dirname(moduleURL.pathname);
-
-
-console.log(JSON.stringify(import.meta));
-console.log(`pathname ${moduleURL.pathname}`);
-console.log(`dirname ${__dirname}`);
+require('./src/controllers/file.controller.js');
 
 const contentPath = "../";
 const app = express();
-const auth = { login: "admin", password: "admin" };
+const auth = { login: 'admin', password: 'admin' };
 
-
-app.post("*", (req, res, next) => {
+app.use(express.urlencoded({
+  extended: true
+}));
+app.use(express.json());
+app.post('*', (req, res, next) => {
   const busboy = new Busboy({
     headers: req.headers,
     limits: {
       fileSize: 256 * 1024 * 1024,
     },
   });
-  busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
     if (filename != "") {
       var saveTo = path.join(os.tmpdir(), path.basename(filename));
-      if (!req.body[fieldname]) req.body[fieldname] = [];
+      if(!req.body[fieldname]) req.body[fieldname] = [];
       try {
         file.pipe(fs.createWriteStream(saveTo));
         req.body[fieldname].push({
-          tmpFile: saveTo,
-          filename,
-          encoding,
-          mimetype,
+          tmpFile: saveTo, filename, encoding, mimetype
         });
       } catch (e) {
         next();
       }
     }
   });
-  busboy.on("field", (fieldname, val, fieldnameTruncated, valTruncated) => {
-    if (!req.body[fieldname]) req.body[fieldname] = [];
+  busboy.on('field', (fieldname, val, fieldnameTruncated, valTruncated) => {
+    if(!req.body[fieldname]) req.body[fieldname] = [];
     req.body[fieldname].push(val);
   });
-  busboy.on("finish", next);
+  busboy.on('finish', next);
   req.pipe(busboy);
 });
-
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
-app.use(express.json());
 
 app.use((req, res, next) => {
   console.log("--------------------------------------");
@@ -72,25 +57,23 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/", express.static(path.join("", "public")));
 
-// app.use((req, res, next) => {
-//   const b64auth = (req.headers.authorization || "").split(" ")[1] || "";
-//   const [login, password] = Buffer.from(b64auth, "base64")
-//     .toString()
-//     .split(":");
-//   if (login && password && login === auth.login && password === auth.password) {
-//     return next();
-//   }
-//   res.set("WWW-Authenticate", 'Basic realm="401"');
-//   res.status(401).send("Authentication required.");
-// });
+app.use('/', express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-  const reqUrl = new URL(
-    req.url,
-    req.protocol + "://" + req.headers.host + "/"
-  );
+  const b64auth = (req.headers.authorization || "").split(" ")[1] || "";
+  const [login, password] = Buffer.from(b64auth, "base64")
+    .toString()
+    .split(":");
+  if (login && password && login === auth.login && password === auth.password) {
+    return next();
+  }
+  res.set("WWW-Authenticate", 'Basic realm="401"');
+  res.status(401).send("Authentication required.");
+});
+
+app.use((req, res, next) => {
+  const reqUrl = new URL(req.url, req.protocol + '://' + req.headers.host + '/');
   let filepath = path.resolve(contentPath + reqUrl.pathname);
   if (reqUrl && reqUrl.pathname.indexOf(".es6") !== -1) {
     fs.stat(filepath, (err, stats) => {
@@ -113,7 +96,7 @@ app.use((req, res, next) => {
               app,
               req,
               res,
-              next,
+              next
             };
             vm.runInNewContext(data.toString(), sandbox);
             next();
@@ -122,66 +105,60 @@ app.use((req, res, next) => {
               status: null,
               path: filepath,
               error: e.toString(),
-              stack: String(e.stack),
+              stack: String(e.stack)
             });
           }
         } else {
-          res.sendFile(filepath, { headers: { "Content-Type": "text/plain" } });
+          res.sendFile(filepath, { headers: { 'Content-Type': 'text/plain' } });
         }
       });
     });
   } else next();
 });
 
+
+
+
+// private controllers(controllers: {
+//   forEach: (arg0: (controller: any) => void) => void;
+// }) {
+//   controllers.forEach((controller) => {
+//     this.app.use("/", controller.router);
+//   });
+// }
+
+
+
 app.use(
   (req, res, next) => {
     if (req.url.indexOf(".es6") === -1) {
-      return express.static(
-        path.join( contentPath),
-        (options = {
-          dotfiles: "allow",
-        })
-      )(req, res, next);
+      return express.static(path.join(__dirname, contentPath), options = {
+        dotfiles: 'allow'
+      })(req, res, next);
+      return next();
     }
-  },
-  serveIndex(path.join(contentPath), {
-    icons: true,
-    hidden: true,
-    template: function (locals, cb) {
+  }
+  , serveIndex(path.join(__dirname, contentPath), {
+    'icons': true,
+    'hidden': true,
+    'template': function (locals, cb) {
       locals.style = undefined;
       console.dir(locals);
-      cb(
-        null,
-        `<html><body>
-      <h1>${
-        locals.directory
-      }&nbsp;<label>+<input type="file" multiple style="display:none;" />
+      cb(null, `<html><body>
+      <h1>${locals.directory}&nbsp;<label>+<input type="file" multiple style="display:none;" />
       </label></h1>
       <ul>
-      ${locals.fileList
-        .map(
-          (item, i) => `<li><a href="${item.name}">${item.name}</a></li>\r\n`
-        )
-        .join("")}
+      ${locals.fileList.map((item, i) => `<li><a href="${item.name}">${item.name}</a></li>\r\n`).join('')}
       </ul>
       <!-- 
-      [${locals.fileList
-        .map((item, i) => `{"name":"${item.name}"},\r\n`)
-        .join("")}]
-      ${locals.fileList
-        .map(
-          (item, i) =>
-            `<img><a href="${item.name}" style="background-color:#404040;background-repeat:no-repeat;background-position: center center;background-size:contain;width:128px;height:128px;  background-image:url('${item.name}');float:left;"></a>`
-        )
-        .join("")}
+      [${locals.fileList.map((item, i) => `{"name":"${item.name}"},\r\n`).join('')}]
+      ${locals.fileList.map((item, i) => `<img><a href="${item.name}" style="background-color:#404040;background-repeat:no-repeat;background-position: center center;background-size:contain;width:128px;height:128px;  background-image:url('${item.name}');float:left;"></a>`).join('')}
       -->
       </body>
       </html>
-      `
-      );
-    },
-  })
-);
+      `);
+    }
+  }));
 //##### Error handler #####
 app.use((err, req, res, next) => {
   if (res.headersSent) {
@@ -197,7 +174,7 @@ app.on("action", function (msg) {
 });
 
 const server = app.listen(3000, function () {
-  console.log("server is running at %s", server.address().port);
+  console.log('server is running at %s', server.address().port);
 });
 
 //##### WSS setup #####
@@ -213,17 +190,17 @@ wss.on("connection", (ws) => {
     }
     app.emit("action", message);
   });
-  ws.on("close", () => {
-    console.log("disconnected");
+  ws.on('close', () => {
+    console.log('disconnected');
     ws.terminate();
   });
   app.wss = wss;
 });
 
-const broadcast = (msg, id = "") => {
+const broadcast = (msg, id = '') => {
   app.wss.clients.forEach((client) => {
-    if (id === "" || client.id === id) {
-      if (typeof msg !== "string") msg = JSON.stringify(msg);
+    if (id === '' || client.id === id) {
+      if (typeof msg !== 'string') msg = JSON.stringify(msg);
       client.send(msg);
     }
   });
